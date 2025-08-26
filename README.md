@@ -21,7 +21,7 @@ The current specifications of OpenFlash are as follows.
 
 ### Memory
 - **SRAM**: 2MB
-- **DDR4 DRAM**: 2GB
+- **DDR4 DRAM**: 2~4GB
 - **Speed**: 1600MT/s
 
 ### NAND Chips
