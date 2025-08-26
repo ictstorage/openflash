@@ -1,0 +1,151 @@
+#define CPUA_CODE_NUM   3
+#define DATA_PTR        4'd0 //program data
+#define P2LP_PTR        4'd1 //p2l page
+#define RAPT_PTR        4'd2 //raid parity
+
+//instruction
+#define INST_PBUS 0x0000
+#define INST_READ 0x1000
+#define INST_JPFW 0x2000
+#define INST_JPBK 0x3000
+  #define JUMP_JPEQ 0x4  //jump for euqal
+  #define JUMP_JPNE 0x5  //jump for non euqal
+  #define JUMP_JPNC 0x6  //jump for no condition
+#define INST_SFTL 0x4000 //shift left
+#define INST_SFTR 0x6000 //shift right
+#define INST_ADD  0x8000 //add
+#define INST_SBT  0x9000 //subtract
+#define INST_AND  0xa000 //and
+#define INST_OR   0xb000 //or
+#define INST_OTHR 0xf000
+  #define OTHR_ADD4 0x1
+  #define OTHR_SBT4 0x3
+#define INST_WDAT 0xF800
+  #define WDAT_BYT0 0x0  //byte0
+  #define WDAT_BYT1 0x1  //byte1
+  #define WDAT_BYTA 0x6  //byte all
+#define INST_PCLR 0xfffd
+#define INST_PFIN 0xfffe
+#define INST_PNOP 0xffff
+
+//cpua proc register
+#define PROC_WDAT 0x0  //write data reg
+#define PROC_GREG 0x1  //general reg
+#define PROC_ZERO 0x2  //all zero
+#define PROC_BFP  0x3  //bfp
+#define PROC_P2L0 0x4  //p2l 0
+#define PROC_P2L1 0x5  //p2l 1
+#define PROC_P2L2 0x6  //p2l 2
+#define PROC_P2L3 0x7  //p2l 3
+#define PROC_L4K  0x8  //l4k
+#define PROC_P4K  0x9  //p4k
+#define PROC_P2LA 0xA  //p2l adr
+#define PROC_QLRA 0xB  //{que_idx, raid idx}
+#define PROC_CMDT 0xC  //cmd type
+#define PROC_NCMD 0xD  //NCTL_CMD_BASE(0x14000000)
+#define PROC_SMMT 0xE  //SRAM_META_BASE
+#define PROC_DMMT 0xF  //DRAM_META_BASE
+
+#define SMDT_BASE 0x2
+
+
+const word gw_cpua_code[][64] = {
+//wire [0:64*16-1] cpua_code [CPUA_CODE_NUM];
+
+//host write command, pcmd_ptr = 6'd0
+//assign cpua_code[0] =
+{
+  //(INST_PBUS | (PROC_L4K  << 8) | (PROC_P4K  << 4) | 0xf     ), //write l2p table
+  (INST_SFTR | (  9      << 8) | (PROC_BFP  << 4) | PROC_GREG), //bfp shift right 10bits to greg
+  (INST_WDAT | (WDAT_BYT0 << 8) |                     SMDT_BASE), //write SMDT_BASE to wdat reg byte0
+  (INST_JPFW | (PROC_GREG << 8) | (JUMP_JPNE << 5) |   7     ), //check whether bfp[11:10] != SRAM_DATA_BASE
+  (INST_WDAT | (WDAT_BYT0 << 8) |                     0xff    ), //write 0xff to wdat reg byte0
+  (INST_WDAT | (WDAT_BYT1 << 8) |                     0x03    ), //write 0x3 to wdat reg byte1
+  (INST_AND  | (PROC_WDAT << 8) | (PROC_BFP  << 4) | PROC_GREG), //bfp & 0x3ff
+  (INST_SFTL | (  11     << 8) | (PROC_GREG << 4) | PROC_GREG), //bfp shift left 12bits
+  (INST_OR   | (PROC_SMMT << 8) | (PROC_GREG << 4) | PROC_GREG), //bfp | SMMT_BASE
+  (INST_JPFW |                     (JUMP_JPNC << 5) |   3     ), //jump
+  (INST_SFTL | (  7      << 8) | (PROC_BFP  << 4) | PROC_GREG), //bfp shift left 8bits
+  (INST_OR   | (PROC_DMMT << 8) | (PROC_GREG << 4) | PROC_GREG), //bfp | DRAM_META_BASE
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_L4K  << 4) | 0xf     ), //write fw meta 0
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_P4K  << 4) | 0xf     ), //write fw meta 1
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_ZERO << 4) | 0xf     ), //write fw meta 2
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_ZERO << 4) | 0xf     ), //write fw meta 3
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_ZERO << 4) | 0xf     ), //write fw meta 4
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_ZERO << 4) | 0xf     ), //write fw meta 5
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_ZERO << 4) | 0xf     ), //write fw meta 6
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_ZERO << 4) | 0xf     ), //write fw meta 7
+
+  (INST_WDAT | (WDAT_BYT0 << 8) |                     0xc     ), //write 0xc to wdat reg byte0
+  (INST_WDAT | (WDAT_BYT1 << 8) |                     0x0     ), //write 0x0 to wdat reg byte1
+  (INST_AND  | (PROC_WDAT << 8) | (PROC_P2LA << 4) | PROC_GREG), //write (p2l_adr & 0xc) to greg
+  (INST_JPFW | (PROC_GREG << 8) | (JUMP_JPNE << 5) |   11    ), //check whether (p2l_adr & 0xc) != 0xc
+  (INST_WDAT | (WDAT_BYTA << 8) |                     0xff    ), //write 0xff to wdat reg all byte
+  (INST_WDAT | (WDAT_BYT0 << 8) |                     0xf0    ), //write 0xf0 to wdat reg byte0
+  (INST_AND  | (PROC_WDAT << 8) | (PROC_P2LA << 4) | PROC_GREG), //p2l_adr & 0xfffffff0
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_P2L0 << 4) | 0xf     ), //write p2l 0
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_P2L1 << 4) | 0xf     ), //write p2l 1
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_P2L2 << 4) | 0xf     ), //write p2l 2
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_GREG << 4) | PROC_GREG), //greg+4
+  (INST_PBUS | (PROC_GREG << 8) | (PROC_P2L3 << 4) | 0xf     ), //write p2l 3
+
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD+4
+  (INST_OTHR | (OTHR_ADD4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD+4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_QLRA << 4) | 0xb     ), //write {qidx, ridx} to nctl
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_P4K  << 4) | 0xf     ), //write p4k to nctl
+  (INST_SFTL | (  15     << 8) | (PROC_BFP  << 4) | PROC_BFP ), //bfp shift left 16bits
+  (INST_OR   | (PROC_BFP  << 8) | (PROC_CMDT << 4) | PROC_CMDT), //cmd_type | bfp
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_CMDT << 4) | 0xf     ), //write (cmd_type | bfp) to nctl
+  (INST_PFIN                                                     )  //finish
+},
+
+//p2l page command, pcmd_ptr = 6'd1
+//assign cpua_code[1] =
+{
+  (INST_WDAT | (WDAT_BYTA << 8) |                     0x00    ), //write 0x00 to wdat reg all byte
+  (INST_WDAT | (WDAT_BYT0 << 8) |                     0x28    ), //write 0x28 to wdat reg byte0
+  (INST_OR   | (PROC_WDAT << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD | 0x28
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_P2LA << 4) | 0x3     ), //write p2l base addr to nctl dmpt
+  (INST_WDAT | (WDAT_BYT0 << 8) |                     0x1c    ), //write 0x1c to wdat reg byte0
+  (INST_SBT  | (PROC_WDAT << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-0x1c
+  (INST_SFTL | (  15     << 8) | (PROC_GREG << 4) | PROC_GREG), //greg shift left 16bits
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_GREG << 4) | 0xc     ), //write dram loc to nctl
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_QLRA << 4) | 0xb     ), //write {qidx, ridx} to nctl
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_P4K  << 4) | 0xf     ), //write p4k to nctl
+  (INST_SFTL | (  15     << 8) | (PROC_BFP  << 4) | PROC_BFP ), //bfp shift left 16bits
+  (INST_OR   | (PROC_BFP  << 8) | (PROC_CMDT << 4) | PROC_CMDT), //cmd_type | bfp
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_CMDT << 4) | 0xf     ), //write (cmd_type | bfp) to nctl
+  (INST_PFIN                                                     )  //finish
+},
+
+//raid parity command, pcmd_ptr = 6'd2
+//assign cpua_code[2] =
+{
+  (INST_WDAT | (WDAT_BYT0 << 8) |                     0x10    ), //write 0x10 to wdat reg byte0
+  (INST_OR   | (PROC_WDAT << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD | 0x10
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_ZERO << 4) | 0x1     ), //write p2l base addr to nctl dmpt
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_QLRA << 4) | 0xb     ), //write {qidx, ridx} to nctl
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_P4K  << 4) | 0xf     ), //write p4k to nctl
+  (INST_SFTL | (  15     << 8) | (PROC_BFP  << 4) | PROC_BFP ), //bfp shift left 16bits
+  (INST_OR   | (PROC_BFP  << 8) | (PROC_CMDT << 4) | PROC_CMDT), //cmd_type | bfp
+  (INST_OTHR | (OTHR_SBT4 << 8) | (PROC_NCMD << 4) | PROC_NCMD), //PROC_NCMD-4
+  (INST_PBUS | (PROC_NCMD << 8) | (PROC_CMDT << 4) | 0xf     ), //write (cmd_type | bfp) to nctl
+  (INST_PFIN                                                     )  //finish
+} };

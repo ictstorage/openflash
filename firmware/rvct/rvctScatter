@@ -1,0 +1,28 @@
+RAM_LOAD 0x0
+{
+	CODE_SRAM +0
+	{
+		rvctVectors.s.o (Vect, +First)
+		* (+RO-CODE)
+		* (+RO-DATA)
+	}
+
+	DATA +0
+	{
+		* (+RW,+ZI)
+	}
+
+	HEAP +0 UNINIT
+	{
+		rvctHeap.s.o (+ZI)
+	}
+
+	STACKS_START 0x18000 EMPTY - 0x1000
+	{
+	}
+
+	STACKS 0x18000 UNINIT
+	{
+		rvctStack.s.o (+ZI)
+	}
+}

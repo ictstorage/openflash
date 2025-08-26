@@ -1,0 +1,21 @@
+:%s/`define/#define/g
+:%s/`ifdef/#ifdef/g
+:%s/`ifndef/#ifndef/g
+:%s/`elsif NAND_1600M/#elif defined(NAND_1600M)/g
+:%s/`elsif PROC_TDLY/#elif defined(PROC_TDLY)/g
+:%s/`else/#else/g
+:%s/`endif/#endif/g
+:%s/`//g
+:%s/16'h/0x/g
+:%s/5'h/0x/g
+:%s/7'h/0x/g
+:%s/8'h/0x/g
+:%s/8'd/  /g
+:%s/NAND_PLANE_NUM/PLANE_QNTY/g
+:%s/\/\/const/const/g
+:%s/wire/\/\/wire/g
+:%s/assign/\/\/assign/g
+:%s/};$/},/g
+:%s/}; \/\/end/} };/g
+:w micro_code
+:q!

@@ -1,0 +1,20 @@
+:%s/`define/#define/g
+:%s/`ifdef/#ifdef/g
+:%s/`ifndef/#ifndef/g
+:%s/`else/#else/g
+:%s/`endif/#endif/g
+:%s/`//g
+:%s/32'h/0x/g
+:%s/16'h/0x/g
+:%s/5'h/0x/g
+:%s/7'h/0x/g
+:%s/8'h/0x/g
+:%s/16'd/  /g
+:%s/8'd/  /g
+:%s/\/\/const/const/g
+:%s/wire/\/\/wire/g
+:%s/assign/\/\/assign/g
+:%s/};$/},/g
+:%s/}; \/\/end/} };/g
+:w cpua_code
+:q!

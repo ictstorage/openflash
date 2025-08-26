@@ -1,0 +1,14 @@
+.vscode
+bin
+drv/obj
+lib
+rvct/obj
+sys/obj
+comm/obj
+hal/obj
+nvme/obj
+test/obj
+share/obj
+*.o
+*.d
+*.zip
